@@ -15,13 +15,14 @@ namespace Sudoku.Benchmark
     {
         static void Main()
         {
-            Console.ReadKey();
+
             Console.WriteLine("Benchmarking GrilleSudoku Solvers");
 
             while (true)
             {
                 try
                 {
+                   
                     Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Complete Benchmark (40 s max per sudoku), \n3-Complete Benchmark (5 mn max per GrilleSudoku), \n4-Exit program");
                     var strMode = Console.ReadLine();
                     int.TryParse(strMode, out var intMode);
@@ -54,34 +55,19 @@ namespace Sudoku.Benchmark
             Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
             var strDiff = Console.ReadLine();
             int.TryParse(strDiff, out var intDiff);
-            SudokuDifficulty difficulty = SudokuDifficulty.Hard;
-            switch (intDiff)
+            SudokuDifficulty difficulty = intDiff switch
             {
-                case 1:
-                    difficulty = SudokuDifficulty.Easy;
-                    break;
-                case 2:
-                    difficulty = SudokuDifficulty.Medium;
-                    break;
-                case 3:
-                    difficulty = SudokuDifficulty.Hard;
-                    break;
-                default:
-                    break;
-            }
-            //SudokuDifficulty difficulty = intDiff switch
-            //{
-            //    1 => SudokuDifficulty.Easy,
-            //    2 => SudokuDifficulty.Medium,
-            //    _ => SudokuDifficulty.Hard
-            //};
+                1 => SudokuDifficulty.Easy,
+                2 => SudokuDifficulty.Medium,
+                _ => SudokuDifficulty.Hard
+            };
 
             var sudokus = SudokuHelper.GetSudokus(difficulty);
 
             Console.WriteLine($"Choose a puzzle index between 1 and {sudokus.Count}");
             var strIdx = Console.ReadLine();
             int.TryParse(strIdx, out var intIdx);
-            var targetSudoku = sudokus[intIdx-1];
+            var targetSudoku = sudokus[intIdx - 1];
 
             Console.WriteLine("Chosen Puzzle:");
             Console.WriteLine(targetSudoku.ToString());
@@ -110,7 +96,7 @@ namespace Sudoku.Benchmark
             {
                 Console.WriteLine("Valid solution:");
             }
-            
+
             Console.WriteLine(cloneSudoku.ToString());
             Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
 

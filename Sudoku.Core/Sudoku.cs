@@ -14,7 +14,7 @@ namespace Sudoku.Core
     /// Holds a list of 81 int for cells, with 0 for empty cells
     /// Can parse strings and files from most common formats and displays the sudoku in an easy to read format
     /// </summary>
-    public class GrilleSudoku:ICloneable
+    public class GrilleSudoku : ICloneable
     {
 
 
@@ -141,7 +141,7 @@ namespace Sudoku.Core
             return output.ToString();
         }
 
-      
+
         public int[] GetPossibilities(int x, int y)
         {
             if (x < 0 || x >= 9 || y < 0 || y >= 9)

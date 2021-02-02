@@ -48,9 +48,9 @@ namespace Sudoku.Benchmark
                     .WithWarmupCount(1)
                     .WithIterationCount(3)
                     .WithInvocationCount(2)
-                    
+
                 );
-                
+
 
             }
         }
@@ -64,7 +64,7 @@ namespace Sudoku.Benchmark
                 AllPuzzles[difficulty] = SudokuHelper.GetSudokus(Difficulty);
             }
 
-            
+
         }
 
         [IterationSetup]
@@ -107,14 +107,14 @@ namespace Sudoku.Benchmark
             {
                 Console.WriteLine($"Solver {SolverPresenter} solving sudoku: \n {puzzle}");
                 var startTime = Clock.Elapsed;
-                var solution = SolverPresenter.SolveWithTimeLimit( puzzle, MaxSolverDuration);
+                var solution = SolverPresenter.SolveWithTimeLimit(puzzle, MaxSolverDuration);
                 if (!solution.IsValid(puzzle))
                 {
                     throw new ApplicationException($"sudoku has {solution.NbErrors(puzzle)} errors");
                 }
 
                 var duration = Clock.Elapsed - startTime;
-                var durationSeconds = (int) duration.TotalSeconds;
+                var durationSeconds = (int)duration.TotalSeconds;
                 var durationMilliSeconds = duration.TotalMilliseconds - (1000 * durationSeconds);
                 Console.WriteLine($"Valid Solution found: \n {solution} \n Solver {SolverPresenter} found the solution  in {durationSeconds} s {durationMilliSeconds} ms");
             }
@@ -125,7 +125,7 @@ namespace Sudoku.Benchmark
     public class SolverPresenter
     {
 
-        
+
 
         public ISudokuSolver Solver { get; set; }
 
@@ -134,12 +134,12 @@ namespace Sudoku.Benchmark
             return Solver.GetType().Name;
         }
 
-        public  Core.GrilleSudoku SolveWithTimeLimit(Core.GrilleSudoku puzzle, TimeSpan maxDuration)
+        public Core.GrilleSudoku SolveWithTimeLimit(Core.GrilleSudoku puzzle, TimeSpan maxDuration)
         {
             try
             {
                 Core.GrilleSudoku toReturn = puzzle.CloneSudoku();
-               
+
                 Task task = Task.Factory.StartNew(() => Solver.Solve(toReturn));
                 task.Wait(maxDuration);
                 if (!task.IsCompleted)
