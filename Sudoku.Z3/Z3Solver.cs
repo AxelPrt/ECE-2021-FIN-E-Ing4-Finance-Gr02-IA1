@@ -1,17 +1,10 @@
-﻿using Sudoku.Core;
+using Sudoku.Core;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Z3;
-using System.Security.Cryptography;
-using System.Globalization;
-using System.Diagnostics;
 
 namespace sudoku.Z3
 {
-
-    
     public class Z3Solver : ISudokuSolver
     {
         protected static Context z3Context = new Context();
@@ -135,127 +128,6 @@ namespace sudoku.Z3
             return toReturn;
         }
 
-        protected Sudoku.Core.GrilleSudoku SolveWithSubstitutions(Sudoku.Core.GrilleSudoku instance)
-       {
-
-            var substExprs = new List<Expr>();
-            var substVals = new List<Expr>();
-
-            for (int i = 0; i < 9; i++)
-            for (int j = 0; j < 9; j++)
-                if (instance.GetCellule(i, j) != 0)
-                {
-                   substExprs.Add(X[i][j]);
-                   substVals.Add(z3Context.MkInt(instance.GetCellule(i, j)));
-                }
-           BoolExpr instance_c = (BoolExpr)GenericContraints.Substitute(substExprs.ToArray(), substVals.ToArray());
-
-           var z3Solver = GetSolver();
-            z3Solver.Assert(instance_c);
-
-            if (z3Solver.Check() == Status.SATISFIABLE)
-            {
-                Model m = z3Solver.Model;
-                for (int i = 0; i < 9; i++)
-                    for (int j = 0; j < 9; j++){
-                        if (instance.GetCellule(i, j) == 0)
-                        {
-                            instance.SetCell(i, j, ((IntNum) m.Evaluate(X[i][j])).Int);
-                        }
-                    }
-            }
-            else
-            {
-                Console.WriteLine("Failed to solve sudoku");
-            }
-            return instance;
-        }
-
-
-       protected Sudoku.Core.GrilleSudoku SolveWithAsumptions(Sudoku.Core.GrilleSudoku instance)
-       {
-
-           BoolExpr instance_c = GetPuzzleConstraint(instance);
-           var z3Solver = GetReusableSolver();
-            if (z3Solver.Check(instance_c) == Status.SATISFIABLE)
-           {
-               Model m = z3Solver.Model;
-               for (int i = 0; i < 9; i++)
-               for (int j = 0; j < 9; j++)
-               {
-                   if (instance.GetCellule(i, j) == 0)
-                   {
-                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
-                   }
-               }
-           }
-           else
-           {
-               Console.WriteLine("Failed to solve sudoku");
-           }
-           return instance;
-       }
-
-
-
-       protected Sudoku.Core.GrilleSudoku SolveWithScope(Sudoku.Core.GrilleSudoku instance)
-       {
-
-           
-           var z3Solver = GetReusableSolver();
-           z3Solver.Push();
-           BoolExpr instance_c = GetPuzzleConstraint(instance);
-            z3Solver.Assert(instance_c);
-
-           if (z3Solver.Check() == Status.SATISFIABLE)
-           {
-               Model m = z3Solver.Model;
-               for (int i = 0; i < 9; i++)
-               for (int j = 0; j < 9; j++)
-               {
-                   if (instance.GetCellule(i, j) == 0)
-                   {
-                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
-                   }
-               }
-           }
-           else
-           {
-               Console.WriteLine("Failed to solve sudoku");
-           }
-           z3Solver.Pop();
-           return instance;
-       }
-
-
-
-        protected Sudoku.Core.GrilleSudoku SolveOriginalCleanup(Sudoku.Core.GrilleSudoku instance)
-       {
-
-           BoolExpr instance_c = GetPuzzleConstraint(instance);
-           var z3Solver = GetSolver();
-           z3Solver.Assert(GenericContraints);
-           z3Solver.Assert(instance_c);
-
-           if (z3Solver.Check() == Status.SATISFIABLE)
-           {
-               Model m = z3Solver.Model;
-               for (int i = 0; i < 9; i++)
-               for (int j = 0; j < 9; j++)
-               {
-                   if (instance.GetCellule(i, j) == 0)
-                   {
-                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
-                   }
-               }
-           }
-           else
-           {
-               Console.WriteLine("Failed to solve sudoku");
-           }
-           return instance;
-       }
-
         protected virtual Solver GetSolver()
         {
             return z3Context.MkSolver();
@@ -266,52 +138,41 @@ namespace sudoku.Z3
             return ReusableZ3Solver;
         }
 
-        protected Sudoku.Core.GrilleSudoku SolveOriginalVersion(Sudoku.Core.GrilleSudoku instance)
+        public void Solve(GrilleSudoku s)
         {
-            BoolExpr instance_c = z3Context.MkTrue();
+            var substExprs = new List<Expr>();
+            var substVals = new List<Expr>();
+
             for (int i = 0; i < 9; i++)
-            for (int j = 0; j < 9; j++)
-                instance_c = z3Context.MkAnd(instance_c,
-                    (BoolExpr)
-                    z3Context.MkITE(z3Context.MkEq(z3Context.MkInt(instance.GetCellule(i, j)), z3Context.MkInt(0)),
-                        z3Context.MkTrue(),
-                        z3Context.MkEq(X[i][j], z3Context.MkInt(instance.GetCellule(i, j)))));
-
-            Solver s = z3Context.MkSolver();
-            s.Assert(GenericContraints);
-            s.Assert(instance_c);
-
-            if (s.Check() == Status.SATISFIABLE)
-            {
-                Model m = s.Model;
-                for (int i = 0; i < 9; i++)
                 for (int j = 0; j < 9; j++)
-                {
-                    instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
-                }
-                return instance;
+                    if (s.GetCellule(i, j) != 0)
+                    {
+                        substExprs.Add(X[i][j]);
+                        substVals.Add(z3Context.MkInt(s.GetCellule(i, j)));
+                    }
+            BoolExpr instance_c = (BoolExpr)GenericContraints.Substitute(substExprs.ToArray(), substVals.ToArray());
 
+            var z3Solver = GetSolver();
+            z3Solver.Assert(instance_c);
 
+            if (z3Solver.Check() == Status.SATISFIABLE)
+            {
+                Model m = z3Solver.Model;
+                for (int i = 0; i < 9; i++)
+                    for (int j = 0; j < 9; j++)
+                    {
+                        if (s.GetCellule(i, j) == 0)
+                        {
+                            s.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                        }
+                    }
             }
             else
             {
                 Console.WriteLine("Failed to solve sudoku");
-                return instance;
             }
         }
 
-
-
-
-        public virtual Sudoku.Core.GrilleSudoku Solve(Sudoku.Core.GrilleSudoku s)
-        {
-            return SolveWithSubstitutions(s);
-        }
-
-        void ISudokuSolver.Solve(GrilleSudoku s)
-        {
-            throw new NotImplementedException();
-        }
     }
 
   
